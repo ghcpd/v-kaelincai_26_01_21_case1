@@ -1,0 +1,10 @@
+# Core dependencies
+wcwidth
+
+# Optional dependencies
+colorama
+
+# Development dependencies
+pytest
+pytest-cov
+mypy
