@@ -1,17 +1,19 @@
 """
-演示脚本：展示prettytable的基本功能
+Demo script: Demonstrates basic PrettyTable functionality
 Issue #206: Add mypy via pre-commit and make mypy pass
 
-这个脚本演示prettytable的基本功能是否正常工作。
-在添加mypy类型检查后，代码功能应该保持不变。
+This script demonstrates that PrettyTable functionality works correctly
+after adding type annotations and fixing mypy errors.
 """
+from __future__ import annotations
 
 from prettytable import PrettyTable
 
-def demo_basic_table():
-    """创建一个基本的表格"""
+
+def demo_basic_table() -> None:
+    """Create a basic table."""
     print("=" * 60)
-    print("演示1: 基本表格")
+    print("Demo 1: Basic Table")
     print("=" * 60)
     
     table = PrettyTable()
@@ -24,10 +26,11 @@ def demo_basic_table():
     print(table)
     print()
 
-def demo_alignment():
-    """演示对齐功能"""
+
+def demo_alignment() -> None:
+    """Demonstrate alignment features."""
     print("=" * 60)
-    print("演示2: 对齐设置")
+    print("Demo 2: Alignment Settings")
     print("=" * 60)
     
     table = PrettyTable()
@@ -36,18 +39,19 @@ def demo_alignment():
     table.add_row(["Bob", 25, "Los Angeles"])
     table.add_row(["Charlie", 35, "Chicago"])
     
-    # 设置对齐
-    table.align["Name"] = "l"  # 左对齐
-    table.align["Age"] = "r"   # 右对齐
-    table.align["City"] = "c"  # 居中对齐
+    # Set alignment
+    table.align["Name"] = "l"  # Left align
+    table.align["Age"] = "r"   # Right align
+    table.align["City"] = "c"  # Center align
     
     print(table)
     print()
 
-def demo_sorting():
-    """演示排序功能"""
+
+def demo_sorting() -> None:
+    """Demonstrate sorting features."""
     print("=" * 60)
-    print("演示3: 排序功能")
+    print("Demo 3: Sorting")
     print("=" * 60)
     
     table = PrettyTable()
@@ -57,18 +61,19 @@ def demo_sorting():
     table.add_row(["Charlie", 78])
     table.add_row(["David", 95])
     
-    print("原始顺序:")
+    print("Original order:")
     print(table)
     print()
     
-    print("按Score降序排序:")
+    print("Sorted by Score (descending):")
     print(table.get_string(sortby="Score", reversesort=True))
     print()
 
-def demo_styling():
-    """演示样式设置"""
+
+def demo_styling() -> None:
+    """Demonstrate styling features."""
     print("=" * 60)
-    print("演示4: 样式设置")
+    print("Demo 4: Styling")
     print("=" * 60)
     
     table = PrettyTable()
@@ -77,7 +82,7 @@ def demo_styling():
     table.add_row(["Banana", "$0.75"])
     table.add_row(["Orange", "$1.25"])
     
-    # 设置边框样式
+    # Set border style
     table.border = True
     table.header = True
     table.padding_width = 2
@@ -85,17 +90,35 @@ def demo_styling():
     print(table)
     print()
 
+
+def demo_html_output() -> None:
+    """Demonstrate HTML output."""
+    print("=" * 60)
+    print("Demo 5: HTML Output")
+    print("=" * 60)
+    
+    table = PrettyTable()
+    table.field_names = ["Language", "Creator"]
+    table.add_row(["Python", "Guido van Rossum"])
+    table.add_row(["Java", "James Gosling"])
+    table.add_row(["C++", "Bjarne Stroustrup"])
+    
+    print(table.get_html_string())
+    print()
+
+
 if __name__ == "__main__":
-    print("PrettyTable Issue #206 演示")
-    print("展示基本功能 - 在添加mypy类型检查前后应该保持一致")
+    print("PrettyTable Issue #206 Demo")
+    print("Demonstrating basic functionality after mypy type fixes")
     print()
     
     demo_basic_table()
     demo_alignment()
     demo_sorting()
     demo_styling()
+    demo_html_output()
     
     print("=" * 60)
-    print("所有演示完成！")
-    print("下一步：运行 'mypy src/prettytable' 查看类型错误")
+    print("All demos completed successfully!")
+    print("Next step: Run 'mypy src/prettytable' to verify type checking passes")
     print("=" * 60)

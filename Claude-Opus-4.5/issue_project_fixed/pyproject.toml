@@ -102,3 +102,10 @@ extra_checks = true
 follow_imports = "silent"
 warn_redundant_casts = true
 warn_unused_ignores = true
+# Ignore missing stubs for third-party libraries
+[[tool.mypy.overrides]]
+module = [
+  "wcwidth",
+  "colorama",
+]
+ignore_missing_imports = true
