@@ -1,0 +1,94 @@
+[build-system]
+requires = ["hatchling>=1.27", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "prettytable"
+description = "A simple Python library for displaying tabular data in visually appealing ASCII tables"
+readme = "README.md"
+license = { text = "BSD-3-Clause" }
+authors = [{ name = "Luke Maurits", email = "luke@maurits.id.au" }]
+maintainers = [{ name = "Hugo van Kemenade" }]
+requires-python = ">=3.10"
+dynamic = ["version"]
+classifiers = [
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Text Processing",
+  "Typing :: Typed",
+]
+dependencies = [
+  "wcwidth>=0.2.14",
+  "colorama>=0.4.6; platform_system == 'Windows'",
+]
+optional-dependencies.tests = [
+  "pytest",
+  "pytest-cov",
+  "pytest-lazy-fixtures",
+]
+optional-dependencies.typecheck = [
+  "mypy>=1.10",
+  "types-colorama",
+  "wcwidth-stubs",
+]
+urls.Homepage = "https://github.com/prettytable/prettytable"
+urls.Source = "https://github.com/prettytable/prettytable"
+urls.Changelog = "https://github.com/prettytable/prettytable/releases"
+
+[tool.hatch]
+version.source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/prettytable/_version.py"
+
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
+
+[tool.pytest.ini_options]
+filterwarnings = ["error"]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+pretty = true
+disallow_any_generics = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+ignore_missing_imports = false
+follow_imports = "normal"
+plugins = []
+
+[tool.ruff]
+fix = true
+lint.extend-select = [
+  "C4",     # flake8-comprehensions
+  "EM",     # flake8-errmsg
+  "I",      # isort
+  "ICN",    # flake8-import-conventions
+  "ISC",    # flake8-implicit-str-concat
+  "LOG",    # flake8-logging
+  "PERF",   # Perflint
+  "PGH",    # pygrep-hooks
+  "PIE",    # flake8-pie
+  "PYI",    # flake8-pyi
+  "RUF022", # unsorted-dunder-all
+  "RUF100", # unused noqa (yesqa)
+  "UP",     # pyupgrade
+  "W",      # pycodestyle warnings
+  "YTT",    # flake8-2020
+]
+lint.ignore = [
+  "PIE790", # unnecessary-placeholder
+]
+lint.isort.known-first-party = ["prettytable"]
+lint.isort.required-imports = ["from __future__ import annotations"]
+
+[tool.pyproject-fmt]
+max_supported_python = "3.15"
