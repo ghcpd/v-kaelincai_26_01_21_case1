@@ -36,13 +36,11 @@ import re
 from enum import IntEnum
 from functools import lru_cache
 from html.parser import HTMLParser
-from typing import Any, Literal, TypedDict, cast
+from typing import IO, TYPE_CHECKING, Any, Final, Literal, TypedDict, TypeAlias, cast
 
-TYPE_CHECKING = False
+from collections.abc import Callable, Mapping, Sequence
+
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
-    from typing import Final, TypeAlias
-
     from _typeshed import SupportsRichComparison
     from typing_extensions import Self
 
@@ -102,7 +100,9 @@ class ObservableDict(dict[str, Any]):
     maintain consistency between related format dictionaries.
     """
 
-    def __init__(self, *args, **kwargs):
+    callback: Callable[[str, Any, Any], None] | None
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the observable dictionary.
 
         Arguments:
@@ -112,7 +112,7 @@ class ObservableDict(dict[str, Any]):
         super().__init__(*args, **kwargs)
         self.callback = None
 
-    def __setitem__(self, key: str, value: Any):
+    def __setitem__(self, key: str, value: Any) -> None:
         """Set an item and trigger callback if value changed.
 
         Sets the item in the dictionary and calls the callback function
@@ -249,7 +249,7 @@ class PrettyTable:
     _hrule: str
     _break_on_hyphens: bool
 
-    def __init__(self, field_names: Sequence[str] | None = None, **kwargs) -> None:
+    def __init__(self, field_names: Sequence[str] | None = None, **kwargs: Any) -> None:
         """Return a new PrettyTable instance
 
         Arguments:
@@ -371,26 +371,26 @@ class PrettyTable:
         self._none_format: dict[str, str | None] = ObservableDict()
         self._none_format.callback = self._remove_custom_format_callback
 
-        self._int_format: dict[str, str | None] = ObservableDict()
+        self._int_format: dict[str, str] = ObservableDict()
         self._int_format.callback = self._remove_custom_format_callback
 
-        self._float_format: dict[str, str | None] = ObservableDict()
+        self._float_format: dict[str, str] = ObservableDict()
         self._float_format.callback = self._remove_custom_format_callback
 
         self._custom_format: dict[str, Callable[[str, Any], str]] = ObservableDict()
         self._custom_format.callback = self._custom_format_callback
 
-        self._align: dict[str, str | None] = ObservableDict()
+        self._align: dict[str, AlignType] = ObservableDict()
         self._align[BASE_ALIGN_VALUE] = "c"
         self._align.callback = self._align_callback
 
-        self._valign: dict[str, str | None] = ObservableDict()
+        self._valign: dict[str, VAlignType] = ObservableDict()
         self._valign.callback = self._valign_callback
 
-        self._max_width: dict[str, int | None] = ObservableDict()
+        self._max_width: dict[str, int] = ObservableDict()
         self._max_width.callback = self._max_width_callback
 
-        self._min_width: dict[str, int | None] = ObservableDict()
+        self._min_width: dict[str, int] = ObservableDict()
         self._min_width.callback = self._min_width_callback
 
         self._kwargs = {}
@@ -525,7 +525,7 @@ class PrettyTable:
             # Equal padding on either side
             return (excess // 2) * " " + text + (excess // 2) * " "
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         if name == "rowcount":
             return len(self._rows)
         elif name == "colcount":
@@ -574,7 +574,7 @@ class PrettyTable:
     # Secondly, in the _get_options method, where keyword arguments are mixed with
     # persistent settings
 
-    def _validate_option(self, option, val) -> None:
+    def _validate_option(self, option: str, val: Any) -> None:
         if option == "field_names":
             self._validate_field_names(val)
         elif option == "none_format":
@@ -643,7 +643,7 @@ class PrettyTable:
         elif option == "attributes":
             self._validate_attributes(option, val)
 
-    def _validate_field_names(self, val):
+    def _validate_field_names(self, val: Sequence[str]) -> None:
         # Check for appropriate length
         if self._field_names:
             try:
@@ -670,7 +670,7 @@ class PrettyTable:
             msg = "Field names must be unique"
             raise ValueError(msg)
 
-    def _validate_none_format(self, val):
+    def _validate_none_format(self, val: str | None) -> None:
         try:
             if val is not None:
                 assert isinstance(val, str)
@@ -678,42 +678,54 @@ class PrettyTable:
             msg = "Replacement for None value must be a string if being supplied."
             raise TypeError(msg)
 
-    def _validate_header_style(self, val):
+    def _validate_header_style(self, val: HeaderStyleType) -> None:
         try:
             assert val in ("cap", "title", "upper", "lower", None)
         except AssertionError:
             msg = "Invalid header style, use cap, title, upper, lower or None"
             raise ValueError(msg)
 
-    def _validate_align(self, val):
+    def _validate_align(self, val: AlignType) -> None:
         try:
             assert val in ["l", "c", "r"]
         except AssertionError:
             msg = f"Alignment {val} is invalid, use l, c or r"
             raise ValueError(msg)
 
-    def _validate_valign(self, val):
+    def _validate_valign(self, val: VAlignType) -> None:
         try:
             assert val in ["t", "m", "b"]
         except AssertionError:
             msg = f"Alignment {val} is invalid, use t, m, b"
             raise ValueError(msg)
 
-    def _validate_nonnegative_int(self, name, val):
+    def _validate_nonnegative_int(self, name: str, val: int | Mapping[str, int] | None) -> None:
+        if val is None:
+            return
+        if isinstance(val, Mapping):
+            for k, v in val.items():
+                self._validate_nonnegative_int(f"{name}.{k}", v)
+            return
         try:
             assert int(val) >= 0
-        except AssertionError:
+        except Exception:
             msg = f"Invalid value for {name}: {val}"
             raise ValueError(msg)
 
-    def _validate_true_or_false(self, name, val):
+    def _validate_true_or_false(self, name: str, val: bool) -> None:
         try:
             assert val in (True, False)
         except AssertionError:
             msg = f"Invalid value for {name}. Must be True or False."
             raise ValueError(msg)
 
-    def _validate_int_format(self, name, val):
+    def _validate_int_format(self, name: str, val: str | Mapping[str, str] | None) -> None:
+        if val is None:
+            return
+        if isinstance(val, Mapping):
+            for k, v in val.items():
+                self._validate_int_format(f"{name}.{k}", v)
+            return
         if val == "":
             return
         try:
@@ -723,7 +735,13 @@ class PrettyTable:
             msg = f"Invalid value for {name}. Must be an integer format string."
             raise ValueError(msg)
 
-    def _validate_float_format(self, name, val):
+    def _validate_float_format(self, name: str, val: str | Mapping[str, str] | None) -> None:
+        if val is None:
+            return
+        if isinstance(val, Mapping):
+            for k, v in val.items():
+                self._validate_float_format(f"{name}.{k}", v)
+            return
         if val == "":
             return
         try:
@@ -741,35 +759,35 @@ class PrettyTable:
             msg = f"Invalid value for {name}. Must be a float format string."
             raise ValueError(msg)
 
-    def _validate_function(self, name, val):
+    def _validate_function(self, name: str, val: Callable[..., Any]) -> None:
         try:
             assert callable(val)
         except AssertionError:
             msg = f"Invalid value for {name}. Must be a function."
             raise ValueError(msg)
 
-    def _validate_hrules(self, name, val):
+    def _validate_hrules(self, name: str, val: HRuleStyle) -> None:
         try:
             assert val in list(HRuleStyle)
         except AssertionError:
             msg = f"Invalid value for {name}. Must be HRuleStyle."
             raise ValueError(msg)
 
-    def _validate_vrules(self, name, val):
+    def _validate_vrules(self, name: str, val: VRuleStyle) -> None:
         try:
             assert val in list(VRuleStyle)
         except AssertionError:
             msg = f"Invalid value for {name}. Must be VRuleStyle."
             raise ValueError(msg)
 
-    def _validate_field_name(self, name, val):
+    def _validate_field_name(self, name: str, val: str | None) -> None:
         try:
             assert (val in self._field_names) or (val is None)
         except AssertionError:
             msg = f"Invalid field name: {val}"
             raise ValueError(msg)
 
-    def _validate_all_field_names(self, name, val):
+    def _validate_all_field_names(self, name: str, val: Sequence[str | None]) -> None:
         try:
             for x in val:
                 self._validate_field_name(name, x)
@@ -777,14 +795,14 @@ class PrettyTable:
             msg = "Fields must be a sequence of field names"
             raise ValueError(msg)
 
-    def _validate_single_char(self, name, val):
+    def _validate_single_char(self, name: str, val: str) -> None:
         try:
             assert _str_block_width(val) == 1
         except AssertionError:
             msg = f"Invalid value for {name}. Must be a string of length 1."
             raise ValueError(msg)
 
-    def _validate_attributes(self, name, val):
+    def _validate_attributes(self, name: str, val: Mapping[str, str]) -> None:
         try:
             assert isinstance(val, dict)
         except AssertionError:
@@ -817,7 +835,7 @@ class PrettyTable:
         return self._none_format
 
     @none_format.setter
-    def none_format(self, val: str | dict[str, str | None] | None):
+    def none_format(self, val: str | dict[str, str | None] | None) -> None:
         """Representation of None values:
 
         Arguments:
@@ -877,7 +895,7 @@ class PrettyTable:
         else:
             self.valign = "t"
 
-    def _align_callback(self, field_name, old_value, new_value):
+    def _align_callback(self, field_name: str, old_value: Any, new_value: AlignType) -> None:
         """Callback to call validators if dict attrs are modified.
 
         This callback is triggered when a field is modified from align dict and
@@ -916,7 +934,7 @@ class PrettyTable:
         else:
             self._align = {BASE_ALIGN_VALUE: "c"}
 
-    def _valign_callback(self, field_name, old_value, new_value):
+    def _valign_callback(self, field_name: str, old_value: Any, new_value: VAlignType) -> None:
         """Callback to call validators if dict attrs are modified.
 
         This callback is triggered when a field is modified from valign dict
@@ -952,7 +970,7 @@ class PrettyTable:
             for field in self._field_names:
                 self._valign[field] = "t"
 
-    def _max_width_callback(self, field_name, old_value, new_value):
+    def _max_width_callback(self, field_name: str, old_value: Any, new_value: int) -> None:
         """Callback to call validators if dict attrs are modified.
 
         This callback is triggered when a field is modified from max_width dict
@@ -985,7 +1003,7 @@ class PrettyTable:
         else:
             self._max_width.clear()
 
-    def _min_width_callback(self, field_name, old_value, new_value):
+    def _min_width_callback(self, field_name: str, old_value: Any, new_value: int) -> None:
         """Callback to call validators if dict attrs are modified.
 
         This callback is triggered when a field is modified from min_width dict
@@ -1289,7 +1307,7 @@ class PrettyTable:
         else:
             self._float_format.clear()
 
-    def _remove_custom_format_callback(self, field_name, old_value, new_value):
+    def _remove_custom_format_callback(self, field_name: str, old_value: Any, new_value: Any) -> None:
         """Callback to remove custom format when a field is removed from format dicts.
 
         This callback is triggered when a field is removed from _none_format,
@@ -1304,7 +1322,7 @@ class PrettyTable:
         if field_name in self._custom_format:
             del self._custom_format[field_name]
 
-    def _custom_format_callback(self, field_name, old_value, new_value):
+    def _custom_format_callback(self, field_name: str, old_value: Any, new_value: Any) -> None:
         """Callback to remove std formats when a field is removed from custom_format.
 
         This callback is triggered when a field is removed from _custom_format
@@ -1335,7 +1353,7 @@ class PrettyTable:
     def custom_format(
         self,
         val: Callable[[str, Any], str] | dict[str, Callable[[str, Any], str]] | None,
-    ):
+    ) -> None:
         """Set custom format for columns using callable functions.
 
         Arguments:
@@ -1960,7 +1978,7 @@ class PrettyTable:
 
         return copy.deepcopy(self)
 
-    def get_formatted_string(self, out_format: str = "text", **kwargs) -> str:
+    def get_formatted_string(self, out_format: str = "text", **kwargs: Any) -> str:
         """Return string representation of specified format of table in current state.
 
         Arguments:
@@ -1993,13 +2011,15 @@ class PrettyTable:
     def _format_value(self, field: str, value: Any) -> str:
         if isinstance(value, int) and field in self._int_format:
             return (f"%{self._int_format[field]}d") % value
-        elif isinstance(value, float) and field in self._float_format:
+        if isinstance(value, float) and field in self._float_format:
             return (f"%{self._float_format[field]}f") % value
 
-        formatter = self._custom_format.get(field, (lambda f, v: str(v)))
+        formatter: Callable[[str, Any], str] = self._custom_format.get(
+            field, lambda f, v: str(v)
+        )
         return formatter(field, value)
 
-    def _compute_table_width(self, options) -> int:
+    def _compute_table_width(self, options: OptionsType) -> int:
         if options["vrules"] == VRuleStyle.FRAME:
             table_width = 2
         elif options["vrules"] == VRuleStyle.ALL:
@@ -2161,7 +2181,7 @@ class PrettyTable:
     # PLAIN TEXT STRING METHODS  #
     ##############################
 
-    def get_string(self, **kwargs) -> str:
+    def get_string(self, **kwargs: Any) -> str:
         """Return string representation of table in current state.
 
         Arguments:
@@ -2508,7 +2528,7 @@ class PrettyTable:
         bits_str = ["".join(bits_y) for bits_y in bits]
         return "\n".join(bits_str)
 
-    def paginate(self, page_length: int = 58, line_break: str = "\f", **kwargs) -> str:
+    def paginate(self, page_length: int = 58, line_break: str = "\f", **kwargs: Any) -> str:
         """Return string representation of table split into pages.
 
         Arguments:
@@ -2535,7 +2555,7 @@ class PrettyTable:
     ##############################
     # CSV STRING METHODS         #
     ##############################
-    def get_csv_string(self, **kwargs) -> str:
+    def get_csv_string(self, **kwargs: Any) -> str:
         """Return string representation of CSV formatted table in the current state
 
         Keyword arguments are first interpreted as table formatting options, and
@@ -2575,7 +2595,7 @@ class PrettyTable:
     ##############################
     # JSON STRING METHODS        #
     ##############################
-    def get_json_string(self, **kwargs) -> str:
+    def get_json_string(self, **kwargs: Any) -> str:
         """Return string representation of JSON formatted table in the current state
 
         Keyword arguments are first interpreted as table formatting options, and
@@ -2617,7 +2637,7 @@ class PrettyTable:
     # HTML STRING METHODS        #
     ##############################
 
-    def get_html_string(self, **kwargs) -> str:
+    def get_html_string(self, **kwargs: Any) -> str:
         """Return string representation of HTML formatted version of table in current
         state.
 
@@ -2831,7 +2851,7 @@ class PrettyTable:
     # LATEX STRING METHODS       #
     ##############################
 
-    def get_latex_string(self, **kwargs) -> str:
+    def get_latex_string(self, **kwargs: Any) -> str:
         """Return string representation of LaTex formatted version of table in current
         state.
 
@@ -2959,7 +2979,7 @@ class PrettyTable:
     # MEDIAWIKI STRING METHODS   #
     ##############################
 
-    def get_mediawiki_string(self, **kwargs) -> str:
+    def get_mediawiki_string(self, **kwargs: Any) -> str:
         """
         Return string representation of the table in MediaWiki table markup.
         The generated markup follows simple MediaWiki syntax. For example:
@@ -3038,7 +3058,9 @@ def _str_block_width(val: str) -> int:
 ##############################
 
 
-def from_csv(fp, field_names: Sequence[str] | None = None, **kwargs) -> PrettyTable:
+
+
+def from_csv(fp: IO[str], field_names: Sequence[str] | None = None, **kwargs: Any) -> PrettyTable:
     import csv
 
     fmtparams = {}
@@ -3073,7 +3095,7 @@ def from_csv(fp, field_names: Sequence[str] | None = None, **kwargs) -> PrettyTa
     return table
 
 
-def from_db_cursor(cursor: Any, **kwargs) -> PrettyTable | None:
+def from_db_cursor(cursor: Any, **kwargs: Any) -> PrettyTable | None:
     if cursor.description:
         table = PrettyTable(**kwargs)
         table.field_names = [col[0] for col in cursor.description]
@@ -3083,7 +3105,7 @@ def from_db_cursor(cursor: Any, **kwargs) -> PrettyTable | None:
     return None
 
 
-def from_json(json_string: str | bytes, **kwargs) -> PrettyTable:
+def from_json(json_string: str | bytes, **kwargs: Any) -> PrettyTable:
     import json
 
     table = PrettyTable(**kwargs)
@@ -3096,7 +3118,7 @@ def from_json(json_string: str | bytes, **kwargs) -> PrettyTable:
 
 
 class TableHandler(HTMLParser):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         HTMLParser.__init__(self)
         self.kwargs = kwargs
         self.tables: list[PrettyTable] = []
@@ -3168,7 +3190,7 @@ class TableHandler(HTMLParser):
                     fields[j] += "'"
 
 
-def from_html(html_code: str, **kwargs) -> list[PrettyTable]:
+def from_html(html_code: str, **kwargs: Any) -> list[PrettyTable]:
     """
     Generates a list of PrettyTables from a string of HTML code. Each <table> in
     the HTML becomes one PrettyTable object.
@@ -3179,7 +3201,7 @@ def from_html(html_code: str, **kwargs) -> list[PrettyTable]:
     return parser.tables
 
 
-def from_html_one(html_code: str, **kwargs) -> PrettyTable:
+def from_html_one(html_code: str, **kwargs: Any) -> PrettyTable:
     """
     Generates a PrettyTable from a string of HTML code which contains only a
     single <table>
@@ -3194,7 +3216,7 @@ def from_html_one(html_code: str, **kwargs) -> PrettyTable:
     return tables[0]
 
 
-def from_mediawiki(wiki_text: str, **kwargs) -> PrettyTable:
+def from_mediawiki(wiki_text: str, **kwargs: Any) -> PrettyTable:
     """
     Returns a PrettyTable instance from simple MediaWiki table markup.
     Note that the table should have a header row.

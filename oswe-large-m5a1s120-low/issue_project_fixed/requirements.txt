@@ -1,0 +1,8 @@
+wcwidth>=0.2.14
+colorama>=0.4.6; platform_system == 'Windows'
+pytest
+pytest-cov
+pytest-lazy-fixtures
+mypy>=1.10
+types-colorama
+wcwidth-stubs
