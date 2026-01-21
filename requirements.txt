@@ -1,0 +1,4 @@
+# Requirements for mypy type checking
+
+mypy>=1.0.0
+types-setuptools
