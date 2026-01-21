@@ -1,0 +1,419 @@
+# PrettyTable Issue #206 - Complete Fix and Full Validation Task
+
+## Role & Objective
+
+You are a Python software engineer responsible for fixing PrettyTable library's type checking issues (Issue #206) and executing comprehensive validation. Your task is to:
+
+1. Create a fixed version of the project that passes mypy static type checking
+2. Implement local type stubs for third-party libraries that lack type information
+3. Create a comprehensive pytest-based test suite with type annotation verification
+4. Execute full validation with demo execution, mypy checking, and test coverage
+5. Verify production-readiness of the fixed project
+
+---
+
+## Inputs & Context
+
+**Project Location**: The workspace contains an `issue_project/` directory with the PrettyTable library that requires type checking fixes.
+
+**Current Issues**:
+- mypy reports errors for missing type stubs on third-party imports
+- `wcwidth` module lacks type information (line ~3030 in prettytable.py)
+- `colorama` library stubs not installed (line ~6 in colortable.py)
+- Need to create local type stub files (.pyi) for missing dependencies
+
+**Existing Resources**:
+- `issue_project/` - Original project structure
+- `src/prettytable/` - Source code files to be fixed
+- `demo_issue_206.py` - Feature demonstration script
+- `test_issue_206.py` - Existing test cases
+- `pyproject.toml` - Project configuration
+- `requirements.txt` and `requirements-mypy.txt` - Dependency specifications
+
+---
+
+## Step-by-Step Instructions
+
+### Phase 1: Setup and Analysis (15 minutes)
+
+1. Examine the original `issue_project/` structure completely
+2. Identify all mypy errors by running `mypy src/prettytable`
+3. Review existing tests and demo scripts
+4. Analyze which third-party libraries lack type stubs
+5. Plan the fix strategy using local type stubs approach
+
+### Phase 2: Create Fixed Project Structure (20 minutes)
+
+1. Create `issue_project_fixed/` directory at workspace level
+2. Create complete subdirectory hierarchy:
+   - `src/prettytable/` - Fixed source code
+   - `tests/` - New pytest-based test suite
+   - `docs/` - Documentation directory
+   - `typings/` - Local type stub files
+3. Copy all source files from original `issue_project/`
+4. Ensure `py.typed` marker file is present
+5. Create/verify all required configuration files
+
+### Phase 3: Create Local Type Stubs (20 minutes)
+
+1. **Create typings directory structure**:
+   ```
+   typings/
+   ├── wcwidth/
+   │   └── __init__.pyi
+   └── colorama/
+       └── __init__.pyi
+   ```
+
+2. **Create wcwidth stub** (`typings/wcwidth/__init__.pyi`):
+   - Define `wcswidth()` function signature
+   - Include type annotations for width calculations
+   - Handle string and None return types
+
+3. **Create colorama stub** (`typings/colorama/__init__.pyi`):
+   - Define `init()` function signature
+   - Include necessary type annotations
+   - Export colorama components with proper types
+
+4. **Update pyproject.toml**:
+   - Add typings directory to mypy search path
+   - Configure mypy to use local stubs: `mypy_path = "./typings"`
+
+### Phase 4: Configure Type Checking (15 minutes)
+
+1. **Update pyproject.toml**:
+   - Enable strict mypy mode: `strict = true`
+   - Set Python version: `python_version = "3.12"`
+   - Add mypy path: `mypy_path = "./typings"`
+   - Configure test discovery for pytest
+
+2. **Update requirements files**:
+   - Add `mypy` for type checking
+   - Include `types-colorama` if available
+   - Include `wcwidth` without type stubs (we provide our own)
+   - Add pytest and testing dependencies
+
+3. **Verify configuration**:
+   - Run `mypy src/prettytable`
+   - Confirm output: `Success: no issues found in 5 source files`
+
+### Phase 5: Create Pytest Test Suite (30 minutes)
+
+Create pytest-based tests in `tests/` directory:
+
+**File 1: test_basic.py** (Regression tests)
+- Basic table creation and configuration
+- Field operations and access
+- Row addition and manipulation
+- Column slicing and alignment
+- Border and styling options
+- Output format rendering
+- Edge cases and special scenarios
+- Total: 15+ tests
+
+**File 2: test_types.py** (Type annotation verification)
+- Type annotation correctness checks
+- Import resolution verification
+- Enum type validation
+- Method signature verification
+- Return type checks
+- IDE type support validation
+- Mypy integration tests
+- Total: 10+ tests, including subprocess mypy execution
+
+Requirements:
+- Total of 25+ tests
+- All tests must pass
+- Use pytest with proper fixtures
+- Test naming should be self-documenting
+- Use subprocess to run mypy verification
+
+### Phase 6: Create/Update Documentation (20 minutes)
+
+**README.md** (200+ lines):
+- Issue #206 context and background
+- Installation instructions
+- Quick start guide
+- Running tests with pytest
+- Mypy type checking verification
+- Project structure explanation
+- Local type stubs explanation
+- Environment setup notes
+
+**docs/SOLUTION.md** (300+ lines):
+- Problem Analysis: mypy errors from missing type information
+- Root Cause: Third-party libraries without type stubs
+- Solution Approach: Local type stubs strategy
+- Implementation Details: Stub file creation
+- Configuration: pyproject.toml settings
+- Testing Approach: pytest organization
+- Challenges and Solutions
+
+**docs/CHANGES.md** (400+ lines):
+- Complete file-by-file changelog
+- Type stub files added
+- Configuration updates
+- Test suite creation
+- Demo script updates
+- Documentation additions
+
+### Phase 7: Execute Full Validation (40 minutes)
+
+**Step 1: Setup Environment**
+```bash
+cd issue_project_fixed
+pip install -r requirements.txt -r requirements-mypy.txt
+```
+
+**Step 2: Type Checking Validation**
+```bash
+mypy src/prettytable
+# Expected: Success: no issues found in 5 source files
+```
+
+**Step 3: Run Demo Script**
+```bash
+PYTHONPATH=src python demo.py
+# Expected: All 4 demo tables render without errors
+```
+
+**Step 4: Run Complete Test Suite**
+```bash
+PYTHONPATH=src pytest -v
+# Expected: All 25+ tests pass
+```
+
+**Step 5: Verify Project Structure**
+- All directories exist and contain correct files
+- Configuration files are present
+- Type stub files are in place
+- Documentation is complete
+
+**Step 6: Functional Verification**
+```python
+from prettytable import PrettyTable, TableStyle, HRuleStyle, VRuleStyle
+from prettytable.colortable import ColorTable, Theme, Themes
+# All imports should succeed
+```
+
+**Step 7: Generate Validation Report**
+- Capture all output from validation steps
+- Confirm exit codes are 0
+- Document all test results
+- Verify no errors or warnings
+
+---
+
+## Output Specification
+
+### Deliverables
+
+1. **Fixed Project Directory**: `issue_project_fixed/`
+   ```
+   issue_project_fixed/
+   ├── src/prettytable/              # Source code (5 files)
+   ├── tests/                        # Test suite (25+ tests)
+   ├── docs/                         # Documentation
+   │   ├── SOLUTION.md
+   │   └── CHANGES.md
+   ├── typings/                      # Local type stubs
+   │   ├── wcwidth/__init__.pyi
+   │   └── colorama/__init__.pyi
+   ├── demo.py                       # Demo script
+   ├── README.md                     # Main documentation
+   ├── pyproject.toml               # Configuration with typings path
+   └── requirements.txt             # Dependencies
+   ```
+
+2. **Validation Results**:
+   - Mypy: `Success: no issues found in 5 source files`
+   - Tests: All 25+ tests passed (0 failures)
+   - Demo: All 4 sample tables rendered without errors
+   - Exit codes: All 0
+
+3. **Documentation**:
+   - README.md - 200+ lines
+   - docs/SOLUTION.md - 300+ lines
+   - docs/CHANGES.md - 400+ lines
+   - Total: 900+ lines
+
+4. **Type Stubs**:
+   - `typings/wcwidth/__init__.pyi` - wcswidth() function signature
+   - `typings/colorama/__init__.pyi` - colorama components
+   - Both with complete type annotations
+
+### Format Requirements
+
+- All paths are relative
+- Configuration uses `mypy_path = "./typings"`
+- Tests use pytest with PYTHONPATH configuration
+- Demo script accepts PYTHONPATH environment variable
+- All commands execute with exit code 0
+- Type stub files use proper .pyi format
+
+---
+
+## Constraints & Preferences
+
+### Technical Constraints
+
+1. **Python Version**: 3.12.10 or compatible
+2. **Type Checking**: mypy in strict mode (`strict = true`)
+3. **Type Stubs**: Create local .pyi files for missing dependencies
+4. **Testing Framework**: pytest with subprocess for mypy execution
+5. **No Breaking Changes**: Maintain 100% backward compatibility
+6. **Original Project**: Must remain unmodified
+
+### Code Quality Standards
+
+1. Type stubs must be complete and accurate
+2. Test coverage should include type annotation verification
+3. Documentation must explain local stub strategy
+4. Comments should clarify non-obvious type decisions
+5. All imports must work with configured paths
+
+### Project Structure Rules
+
+1. Original `issue_project/` remains unchanged
+2. All work in `issue_project_fixed/` directory
+3. Use relative paths throughout
+4. Create `typings/` with proper structure
+5. Create `tests/` with `__init__.py` if needed
+6. Update `pyproject.toml` with `mypy_path` setting
+
+---
+
+## Quality Gates
+
+### Completion Criteria (All must be satisfied)
+
+✅ **Type Checking**
+- [ ] Local type stubs created for wcwidth and colorama
+- [ ] `mypy src/prettytable` returns zero errors
+- [ ] Message displays: `Success: no issues found in 5 source files`
+- [ ] `mypy_path` configured in pyproject.toml
+
+✅ **Test Execution**
+- [ ] All 25+ tests pass (15+ regression + 10+ type tests)
+- [ ] Pytest runs successfully with PYTHONPATH=src
+- [ ] Test output shows clear pass/fail for all tests
+- [ ] Test execution time under 3 seconds
+
+✅ **Demo Validation**
+- [ ] demo.py executes without errors
+- [ ] All 4 demo tables render correctly
+- [ ] No exception traces or error messages
+- [ ] Works with PYTHONPATH=src environment variable
+
+✅ **Type Stub Verification**
+- [ ] `typings/wcwidth/__init__.pyi` exists and is valid
+- [ ] `typings/colorama/__init__.pyi` exists and is valid
+- [ ] Stubs provide complete function signatures
+- [ ] Mypy correctly uses local stubs
+
+✅ **Documentation**
+- [ ] README.md complete with stub explanation (200+ lines)
+- [ ] docs/SOLUTION.md thorough (300+ lines)
+- [ ] docs/CHANGES.md detailed (400+ lines)
+- [ ] All documentation uses proper Markdown
+
+✅ **Functionality Verification**
+- [ ] Table creation works
+- [ ] All operations function correctly
+- [ ] Backward compatibility maintained
+- [ ] ColorTable features work
+
+### Self-Verification Steps
+
+Before finalizing:
+1. Run validation sequence twice for consistency
+2. Verify all 25+ tests pass on clean installation
+3. Confirm mypy zero-error result
+4. Test demo script with and without PYTHONPATH
+5. Review all type stub files for completeness
+6. Check documentation accuracy
+7. Verify relative paths work
+
+---
+
+## Critical Execution Steps (Execute in Exact Order)
+
+1. **Create** fixed project structure with typings directory
+2. **Copy** source files from original project
+3. **Create** local type stub files (.pyi) for wcwidth and colorama
+4. **Configure** pyproject.toml with mypy_path and strict settings
+5. **Verify** mypy passes with zero errors
+6. **Create** comprehensive pytest-based test suite (25+ tests)
+7. **Run** all tests and confirm passing
+8. **Create** complete documentation explaining local stub approach
+9. **Execute** full validation sequence (demo + mypy + tests)
+10. **Report** explicit validation summary with test results
+
+---
+
+## Validation Execution Commands
+
+Execute these commands in sequence from `issue_project_fixed/`:
+
+```bash
+# Setup
+pip install -r requirements.txt -r requirements-mypy.txt
+
+# Type checking
+mypy src/prettytable
+# Expected: Success: no issues found in 5 source files
+
+# Run demo
+PYTHONPATH=src python demo.py
+# Expected: All 4 demo tables render, exit code 0
+
+# Run tests
+PYTHONPATH=src pytest -v
+# Expected: All 25+ tests passed, exit code 0
+
+# Verify imports
+python -c "from prettytable import PrettyTable; from prettytable.colortable import ColorTable"
+# Expected: No errors, exit code 0
+```
+
+---
+
+## Final Reporting Template
+
+After completing all work, provide validation summary:
+
+```
+FINAL VALIDATION SUMMARY - gpt-5.1-codex-max
+==============================================
+
+✅ Type Checking: PASSED (0 errors)
+   - Local type stubs created for wcwidth and colorama
+   - mypy src/prettytable → Success: no issues found in 5 source files
+
+✅ Test Execution: PASSED (X/X tests passed)
+   - Regression tests: 15+ passed
+   - Type annotation tests: 10+ passed
+   - Total execution time: < 3 seconds
+
+✅ Demo Validation: PASSED
+   - All 4 sample tables rendered successfully
+   - No errors or exceptions encountered
+
+✅ Documentation: COMPLETE
+   - README.md: 200+ lines (with stub explanation)
+   - docs/SOLUTION.md: 300+ lines
+   - docs/CHANGES.md: 400+ lines
+   - Total: 900+ lines of documentation
+
+✅ Project Structure: CORRECT
+   - issue_project_fixed/ directory properly organized
+   - typings/ directory with .pyi files present
+   - tests/ directory with pytest suite
+   - All configuration files correct
+
+VERDICT: All test cases passed. The project is production-ready.
+The local type stub approach successfully resolved all mypy errors
+while maintaining full backward compatibility.
+```
+
+Ensure the final statement "All test cases passed" appears in your report.
