@@ -541,11 +541,9 @@ class PrettyTable:
         if isinstance(index, slice):
             for row in self._rows[index]:
                 new.add_row(row)
-        elif isinstance(index, int):
-            new.add_row(self._rows[index])
         else:
-            msg = f"Index {index} is invalid, must be an integer or slice"
-            raise IndexError(msg)
+            # index must be int due to type annotation
+            new.add_row(self._rows[index])
         return new
 
     def __str__(self) -> str:
@@ -1353,13 +1351,11 @@ class PrettyTable:
             for field, fval in val.items():
                 self._validate_function(f"custom_value.{field}", fval)
                 self._custom_format[field] = fval
-        elif callable(val):
+        else:
+            # val must be callable due to type annotation
             self._validate_function("custom_value", val)
             for field in self._field_names:
                 self._custom_format[field] = val
-        else:
-            msg = "The custom_format property need to be a dictionary or callable"
-            raise TypeError(msg)
 
     @property
     def padding_width(self) -> int:
@@ -1712,9 +1708,7 @@ class PrettyTable:
             self._set_single_border_style()
         elif style == TableStyle.RANDOM:
             self._set_random_style()
-        elif style != TableStyle.DEFAULT:
-            msg = "Invalid pre-set style"
-            raise ValueError(msg)
+        # else: style == TableStyle.DEFAULT (already handled by _set_default_style)
 
     def _set_orgmode_style(self) -> None:
         self.orgmode = True
