@@ -96,7 +96,7 @@ class Themes:
 
 
 class ColorTable(PrettyTable):
-    def __init__(self, field_names: list[str] | None = None, **kwargs) -> None:
+    def __init__(self, field_names=None, **kwargs) -> None:
         super().__init__(field_names=field_names, **kwargs)
         # TODO: Validate option
 
