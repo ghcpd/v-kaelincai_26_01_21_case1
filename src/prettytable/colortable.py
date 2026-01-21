@@ -1,26 +1,19 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-
 from .prettytable import PrettyTable
 
-if TYPE_CHECKING:
-    # colorama is an optional runtime dependency; types provided via types-colorama
-    from colorama import ansi  # noqa: F401
+try:
+    from colorama import init
 
-try:  # pragma: no cover - optional dependency
-    from colorama import init as _colorama_init
+    init()
+except ImportError:
+    pass
 
-    _colorama_init()
-except Exception:  # noqa: BLE001 - we accept absence of colorama
-    _colorama_init = None  # type: ignore[assignment]
 
 RESET_CODE = "\x1b[0m"
 
 
 class Theme:
-    """Encapsulates ANSI color/style codes for table rendering."""
-
     def __init__(
         self,
         default_color: str = "",
@@ -31,35 +24,23 @@ class Theme:
         junction_char: str = "+",
         junction_color: str = "",
     ) -> None:
-        self.default_color: str = Theme.format_code(default_color)
-        self.vertical_char: str = vertical_char
-        self.vertical_color: str = Theme.format_code(vertical_color)
-        self.horizontal_char: str = horizontal_char
-        self.horizontal_color: str = Theme.format_code(horizontal_color)
-        self.junction_char: str = junction_char
-        self.junction_color: str = Theme.format_code(junction_color)
+        self.default_color = Theme.format_code(default_color)
+        self.vertical_char = vertical_char
+        self.vertical_color = Theme.format_code(vertical_color)
+        self.horizontal_char = horizontal_char
+        self.horizontal_color = Theme.format_code(horizontal_color)
+        self.junction_char = junction_char
+        self.junction_color = Theme.format_code(junction_color)
 
     @staticmethod
     def format_code(s: str) -> str:
-        """Return a normalized ANSI escape sequence (or empty string).
-
-        If ``s`` is already an escape sequence, return as-is; otherwise wrap in
-        ``\x1b[...m``. Empty/whitespace-only strings return "".
-        """
-
+        """Takes string and intelligently puts it into an ANSI escape sequence"""
         if s.strip() == "":
             return ""
-        if s.startswith("\x1b["):
+        elif s.startswith("\x1b["):
             return s
-        return f"\x1b[{s}m"
-
-    def __repr__(self) -> str:  # pragma: no cover - trivial
-        return (
-            f"Theme(default_color={self.default_color!r}, vertical_char={self.vertical_char!r}, "
-            f"vertical_color={self.vertical_color!r}, horizontal_char={self.horizontal_char!r}, "
-            f"horizontal_color={self.horizontal_color!r}, junction_char={self.junction_char!r}, "
-            f"junction_color={self.junction_color!r})"
-        )
+        else:
+            return f"\x1b[{s}m"
 
 
 class Themes:
@@ -115,17 +96,11 @@ class Themes:
 
 
 class ColorTable(PrettyTable):
-    """PrettyTable variant that applies ANSI colors/styles via a Theme."""
-
-    def __init__(
-        self,
-        field_names: list[str] | tuple[str, ...] | None = None,
-        *,
-        theme: Theme | None = None,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, field_names=None, **kwargs) -> None:
         super().__init__(field_names=field_names, **kwargs)
-        self.theme: Theme = theme or Themes.DEFAULT
+        # TODO: Validate option
+
+        self.theme = kwargs.get("theme") or Themes.DEFAULT
 
     @property
     def theme(self) -> Theme:
@@ -140,17 +115,25 @@ class ColorTable(PrettyTable):
         theme = self._theme
 
         self._vertical_char = (
-            theme.vertical_color + theme.vertical_char + RESET_CODE + theme.default_color
+            theme.vertical_color
+            + theme.vertical_char
+            + RESET_CODE
+            + theme.default_color
         )
 
         self._horizontal_char = (
-            theme.horizontal_color + theme.horizontal_char + RESET_CODE + theme.default_color
+            theme.horizontal_color
+            + theme.horizontal_char
+            + RESET_CODE
+            + theme.default_color
         )
 
         self._junction_char = (
-            theme.junction_color + theme.junction_char + RESET_CODE + theme.default_color
+            theme.junction_color
+            + theme.junction_char
+            + RESET_CODE
+            + theme.default_color
         )
 
-    def get_string(self, **kwargs: Any) -> str:
-        # Append a trailing reset so downstream renderings do not leak styles
+    def get_string(self, **kwargs) -> str:
         return super().get_string(**kwargs) + RESET_CODE
