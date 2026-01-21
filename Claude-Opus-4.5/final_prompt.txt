@@ -1,0 +1,178 @@
+# PrettyTable Issue #206 Fix - Complete Implementation & Validation
+
+## Role & Objective
+
+You are a Python software engineer tasked with:
+1. Fixing type checking issues in the prettytable project by creating a fixed version in `issue_project_fixed/` directory
+2. Resolving all mypy static type checking errors while maintaining full functionality
+3. Implementing comprehensive test suite and documentation
+4. Executing complete project validation to ensure all requirements are met and all tests pass
+
+## Task Part 1: Create Fixed Project Structure
+
+**Target Directory**: Create `issue_project_fixed/` with the following structure:
+```
+issue_project_fixed/
+├── src/prettytable/          # Fixed source code
+│   ├── __init__.py
+│   ├── prettytable.py
+│   ├── colortable.py
+│   └── ... (all necessary files)
+├── tests/                    # Comprehensive test files
+│   ├── test_basic.py
+│   ├── test_types.py
+│   ├── test_functionality.py
+│   └── test_mypy.py
+├── docs/                     # Documentation
+│   ├── SOLUTION.md
+│   └── CHANGES.md
+├── demo.py
+├── pyproject.toml
+├── requirements.txt
+└── README.md
+```
+
+## Task Part 2: Fix Type Checking Issues
+
+**Problem**: Running `mypy src/prettytable` produces 2 errors:
+1. Missing type stubs for `wcwidth` library (import-untyped error)
+2. Missing type stubs for `colorama` library (import-untyped error)
+
+**Requirements**:
+- All mypy checks must pass: `mypy src/prettytable` → "Success: no issues found"
+- Do NOT modify original `issue_project/` directory
+- Maintain 100% backward compatibility and unchanged API
+- Use proper type annotations (modern Python syntax with `list[str]` instead of `List[str]`)
+- Only use `# type: ignore` comments when absolutely necessary
+- Handle third-party library type stubs appropriately in pyproject.toml
+- Analyze and resolve any unreachable code warnings
+- Add proper type annotations for class attributes and methods
+- Fix method signatures that don't comply with type checking standards
+
+## Task Part 3: Create Comprehensive Test Suite
+
+Use pytest framework to create tests covering:
+
+**1. Functionality Tests**:
+- Table creation and basic operations
+- Column alignment (left, right, center)
+- Row/column operations and styling
+- Sorting, filtering, custom formatting
+- Color table functionality
+- All edge cases and special scenarios
+
+**2. Type Annotation Tests**:
+- Verify type hints are correct for IDE support
+- Test that type-annotated functions work as expected
+- Validate return types and parameter types
+
+**3. Mypy Integration Tests**:
+- Automated verification that mypy passes
+- Ensure no new type errors are introduced
+
+**Success Criteria**: All tests must pass, 100% coverage of core features from original `test_issue_206.py`, clear test names
+
+## Task Part 4: Create Complete Documentation
+
+**README.md** (350+ lines):
+- Project overview and Issue #206 background
+- Quick start guide (installation, running, testing)
+- Project structure explanation
+- How to verify the fix, usage examples, troubleshooting
+
+**SOLUTION.md** (400+ lines):
+- Problem analysis: Why do these mypy errors occur?
+- Root cause explanation
+- Fix approach: What changes were made and why?
+- Key code modifications with before/after comparison
+- Challenges encountered and how they were solved
+
+**CHANGES.md** (300+ lines):
+- List all key modifications by file
+- Reasons for changes and their impact
+- Before/after code comparison
+
+Requirements: Clear Markdown formatting, code examples, relative paths, professional language
+
+## Task Part 5: Execute Full Project Validation
+
+**Part 5.1 - Project Setup & Execution**:
+1. Set up the environment
+2. Install all project dependencies
+3. Build/install the package (`pip install -e .`)
+4. Verify project launches successfully without errors
+
+**Part 5.2 - Execute All Automated Tests**:
+1. Run complete test suite: `pytest` or `pytest tests/` - ALL tests must pass
+2. Verify test coverage is comprehensive
+3. Ensure no test failures or warnings
+
+**Part 5.3 - Verify Type Checking**:
+1. Run: `mypy src/prettytable`
+2. Expected output: "Success: no issues found in X source files"
+3. Zero type checking errors should be present
+
+**Part 5.4 - Verify Functionality**:
+1. Run demo script: `python demo.py`
+2. Verify output is correct and displays tables properly
+3. Ensure no runtime errors or warnings
+4. Verify functionality matches original project
+
+**Part 5.5 - Create Verification Report**:
+1. Document all validation results
+2. Include test execution logs showing all tests passed
+3. Include mypy output showing success
+4. Include demo output sample
+5. Create file: `issue_project_fixed/VERIFICATION.md`
+
+## Constraints & Preferences
+
+**Do NOT**:
+- Modify original `issue_project/` directory
+- Break code logic to pass mypy
+- Overuse `Any` type or `# type: ignore` comments
+- Introduce new external dependencies unless absolutely necessary
+
+**Use**:
+- Modern Python type syntax (`list[str]`, `dict[str, int]`, etc.)
+- Clear, readable code with appropriate comments
+- Relative paths only
+- Professional documentation style
+
+**Maintain**:
+- 100% backward compatibility
+- Unchanged public API
+- Same functionality as original project
+- Code quality standards
+
+## Quality Gates - Verify Before Completion
+
+- ✓ `mypy src/prettytable` returns "Success: no issues found"
+- ✓ `pytest` shows ALL tests passing with no failures
+- ✓ `python demo.py` runs without errors and displays correctly
+- ✓ All source files have appropriate type annotations
+- ✓ README.md is complete and clear
+- ✓ SOLUTION.md explains all fixes in detail
+- ✓ CHANGES.md lists all modifications
+- ✓ VERIFICATION.md documents all validation results with complete test logs
+- ✓ No new dependencies introduced unnecessarily
+- ✓ Code follows Python type annotation best practices
+
+## Deliverables
+
+Upon completion, you must be able to:
+1. Show `issue_project_fixed/` directory with all required files
+2. Run `mypy src/prettytable` → Success with all tests passing
+3. Run `pytest` → All tests pass (include test count in output)
+4. Run `python demo.py` → Correct output with no errors
+5. Review comprehensive documentation files
+6. Verify complete validation report with execution logs
+
+## Important Notes
+
+- This is a single-round task - all work must be completed in one execution
+- Execute the complete project validation as the final step
+- Ensure all test results and validation outputs are documented in VERIFICATION.md
+- Focus on understanding the root cause of type issues, not just patching
+- Prioritize code quality and maintainability
+- All decisions should be well-documented in SOLUTION.md
